@@ -1,5 +1,7 @@
 {
     "appKeys": {
+        "KEY_ACCOUNT_BAL": 3,
+        "KEY_AVAILABLE_CASH": 2,
         "KEY_CONDITIONS": 1,
         "KEY_TEMPERATURE": 0
     },

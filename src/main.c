@@ -2,16 +2,21 @@
 
 #define KEY_TEMPERATURE 0
 #define KEY_CONDITIONS 1
+#define KEY_AVAILABLE_CASH 2
+#define KEY_ACCOUNT_BAL 3
   
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 static TextLayer *s_weather_layer;
+static TextLayer *s_cash_layer;
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
   // Store incoming information
   static char temperature_buffer[8];
   static char conditions_buffer[32];
   static char weather_layer_buffer[32];
+  static char cash_buffer[32];
+  
   
   // Read first item
   Tuple *t = dict_read_first(iterator);
@@ -26,6 +31,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
       case KEY_CONDITIONS:
         snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", t->value->cstring);
       break;
+      case KEY_AVAILABLE_CASH:
+      break;
+      case KEY_ACCOUNT_BAL:
+        snprintf(cash_buffer, sizeof(cash_buffer), "%s", t->value->cstring);
+      break;
     default:
         APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key);
     break;
@@ -36,6 +46,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   // Assemble full string and display
   snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "%s, %s", temperature_buffer, conditions_buffer);
   text_layer_set_text(s_weather_layer, weather_layer_buffer);
+  
+  //display the cash
+  text_layer_set_text(s_cash_layer, cash_buffer);
 }
 
 
@@ -77,7 +90,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 
-
+//Wires up the layers to the main window
 static void main_window_load(Window *window) {
   // Create time TextLayer
   s_time_layer = text_layer_create(GRect(0, 55, 144, 50));
@@ -91,6 +104,13 @@ static void main_window_load(Window *window) {
   text_layer_set_text_color(s_weather_layer, GColorBlack);
   text_layer_set_text_alignment(s_weather_layer, GTextAlignmentCenter);
   text_layer_set_text(s_weather_layer, "Loading...");
+  
+  // Create cash TextLayer
+  s_cash_layer = text_layer_create(GRect(0, 10, 144, 25));
+  text_layer_set_background_color(s_cash_layer, GColorClear);
+  text_layer_set_text_color(s_cash_layer, GColorBlack);
+  text_layer_set_text_alignment(s_cash_layer, GTextAlignmentCenter);
+  text_layer_set_text(s_cash_layer, "Loading...");
 
 
   // Improve the layout to be more like a watchface
@@ -99,11 +119,12 @@ static void main_window_load(Window *window) {
 
   // Add it as a child layer to the Window's root layer
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_time_layer));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_cash_layer));
   
   // Register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-
-  layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_layer));
+  
 }
 
 
